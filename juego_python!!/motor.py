@@ -5,146 +5,143 @@ import random
 pygame.init()
 
 # Configuración de la pantalla
-WIDTH, HEIGHT = 600, 800
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Galaga - Meta con Imagen")
+ANCHO, ALTO = 600, 800
+pantalla = pygame.display.set_mode((ANCHO, ALTO))
+pygame.display.set_caption("Guerra Galáctica")
 
-# Cargar la imagen de fondo
-background = pygame.image.load(r"C:\Users\Nehuen\OneDrive\Escritorio\juego_python!!\fondo.jpg")
-background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+# Cargar imágenes
+fondo = pygame.image.load(r"C:\Users\Nehuen\OneDrive\Escritorio\juego_python!!\fondo.jpg")
+fondo = pygame.transform.scale(fondo, (ANCHO, ALTO))
 
-# Cargar la imagen del personaje
-player_image = pygame.image.load(r"C:\Users\Nehuen\OneDrive\Escritorio\juego_python!!\imagen_personaje.png")
-player_image = pygame.transform.scale(player_image, (50, 50))
+imagen_jugador = pygame.image.load(r"C:\Users\Nehuen\OneDrive\Escritorio\juego_python!!\imagen_personaje.png")
+imagen_jugador = pygame.transform.scale(imagen_jugador, (50, 50))
 
-# Cargar la imagen de los enemigos
-enemy_image = pygame.image.load(r"C:\Users\Nehuen\OneDrive\Escritorio\juego_python!!\enemigo.webp")
-enemy_image = pygame.transform.scale(enemy_image, (35, 35))
+imagen_enemigo = pygame.image.load(r"C:\Users\Nehuen\OneDrive\Escritorio\juego_python!!\enemigo.webp")
+imagen_enemigo = pygame.transform.scale(imagen_enemigo, (35, 35))
 
-# Cargar la imagen de la meta
-goal_image = pygame.image.load(r"C:\Users\Nehuen\OneDrive\Escritorio\juego_python!!\meta.png")
-goal_image = pygame.transform.scale(goal_image, (400, 100))  # Ajuste de tamaño
+imagen_meta = pygame.image.load(r"C:\Users\Nehuen\OneDrive\Escritorio\juego_python!!\meta.png")
+imagen_meta = pygame.transform.scale(imagen_meta, (400, 100))
 
-# Definir colores
-WHITE = (255, 255, 255)
-GREEN = (0, 255, 0)
+# Color del disparo
+BLANCO = (255, 255, 255)
 
-# Jugador
-player = pygame.Rect(WIDTH//2 - 25, HEIGHT - 60, 50, 50)
-player_speed = 5
-lives = 5  # Vidas del jugador
+# Configuración del jugador
+jugador = pygame.Rect(ANCHO//2 - 25, ALTO - 60, 50, 50)
+velocidad_jugador = 5
+vidas = 5
 
 # Meta (objetivo donde se gana)
-goal = pygame.Rect(WIDTH//2 - 50, 20, 100, 30)
+meta = pygame.Rect(ANCHO//2 - 50, 20, 100, 30)
 
 # Clase Enemigo
-class Enemy:
+class Enemigo:
     def __init__(self):
-        self.size = random.randint(20, 40)
-        self.rect = pygame.Rect(random.randint(0, WIDTH - self.size), random.randint(50, 300), self.size, self.size)
-        self.health = random.randint(2, 4)
-        self.speed = random.randint(3, 6)
+        self.tamaño = random.randint(20, 40)
+        self.rect = pygame.Rect(random.randint(0, ANCHO - self.tamaño), random.randint(50, 300), self.tamaño, self.tamaño)
+        self.salud = random.randint(2, 4)
+        self.velocidad = random.randint(3, 6)
 
-    def move(self):
-        self.rect.y += self.speed
-        if self.rect.y > HEIGHT:
+    def mover(self):
+        self.rect.y += self.velocidad
+        if self.rect.y > ALTO:
             self.rect.y = random.randint(50, 300)
-            self.rect.x = random.randint(0, WIDTH - self.size)
+            self.rect.x = random.randint(0, ANCHO - self.tamaño)
 
 # Crear enemigos
-enemies = [Enemy() for _ in range(8)]
+enemigos = [Enemigo() for _ in range(8)]
 
 # Proyectiles
-bullets = []
-bullet_speed = -5
+proyectiles = []
+velocidad_proyectil = -5
 
 # Estado de teclas presionadas
-keys_pressed = {pygame.K_w: False, pygame.K_a: False, pygame.K_d: False}
+teclas_presionadas = {pygame.K_w: False, pygame.K_a: False, pygame.K_d: False}
 
-clock = pygame.time.Clock()
-running = True
-victory = False  # Nueva variable para controlar el estado de victoria
+# Control del tiempo
+reloj = pygame.time.Clock()
+ejecutando = True
+victoria = False
 
-while running:
-    screen.blit(background, (0, 0))  # Dibujar el fondo personalizado
+while ejecutando:
+    pantalla.blit(fondo, (0, 0))
 
     # Eventos
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        if event.type == pygame.KEYDOWN:
-            if event.key in keys_pressed:
-                keys_pressed[event.key] = True
-        if event.type == pygame.KEYUP:
-            if event.key in keys_pressed:
-                keys_pressed[event.key] = False
-        if event.type == pygame.MOUSEBUTTONDOWN:  # Disparo con clic izquierdo
-            if event.button == 1:
-                bullets.append(pygame.Rect(player.x + player.width//2 - 5, player.y, 10, 20))
+    for evento in pygame.event.get():
+        if evento.type == pygame.QUIT:
+            ejecutando = False
+        if evento.type == pygame.KEYDOWN:
+            if evento.key in teclas_presionadas:
+                teclas_presionadas[evento.key] = True
+        if evento.type == pygame.KEYUP:
+            if evento.key in teclas_presionadas:
+                teclas_presionadas[evento.key] = False
+        if evento.type == pygame.MOUSEBUTTONDOWN:  
+            if evento.button == 1:
+                proyectiles.append(pygame.Rect(jugador.x + jugador.width//2 - 5, jugador.y, 10, 20))
 
-    if not victory:  # Solo mover elementos si no has ganado
+    if not victoria:
         # Movimiento del jugador
-        if keys_pressed[pygame.K_w] and player.y > 0:
-            player.y -= player_speed
-        if keys_pressed[pygame.K_a] and player.x > 0:
-            player.x -= player_speed
-        if keys_pressed[pygame.K_d] and player.x < WIDTH - player.width:
-            player.x += player_speed
+        if teclas_presionadas[pygame.K_w] and jugador.y > 0:
+            jugador.y -= velocidad_jugador
+        if teclas_presionadas[pygame.K_a] and jugador.x > 0:
+            jugador.x -= velocidad_jugador
+        if teclas_presionadas[pygame.K_d] and jugador.x < ANCHO - jugador.width:
+            jugador.x += velocidad_jugador
 
         # Movimiento de los proyectiles
-        bullets = [bullet for bullet in bullets if bullet.y > 0]
-        for bullet in bullets:
-            bullet.y += bullet_speed
+        proyectiles = [p for p in proyectiles if p.y > 0]
+        for proyectil in proyectiles:
+            proyectil.y += velocidad_proyectil
 
         # Movimiento de enemigos
-        for enemy in enemies:
-            enemy.move()
+        for enemigo in enemigos:
+            enemigo.mover()
 
         # Detección de colisión con enemigos
-        bullets_to_remove = []
-        enemies_to_remove = []
-        for enemy in enemies:
-            if player.colliderect(enemy.rect):
-                lives -= 1
-                enemies_to_remove.append(enemy)
-            for bullet in bullets:
-                if enemy.rect.colliderect(bullet):
-                    enemy.health -= 1
-                    bullets_to_remove.append(bullet)
-                    if enemy.health <= 0:
-                        enemies_to_remove.append(enemy)
+        proyectiles_a_eliminar = []
+        enemigos_a_eliminar = []
+        for enemigo in enemigos:
+            if jugador.colliderect(enemigo.rect):
+                vidas -= 1
+                enemigos_a_eliminar.append(enemigo)
+            for proyectil in proyectiles:
+                if enemigo.rect.colliderect(proyectil):
+                    enemigo.salud -= 1
+                    proyectiles_a_eliminar.append(proyectil)
+                    if enemigo.salud <= 0:
+                        enemigos_a_eliminar.append(enemigo)
 
-        enemies = [enemy for enemy in enemies if enemy not in enemies_to_remove]
-        bullets = [bullet for bullet in bullets if bullet not in bullets_to_remove]
+        enemigos = [e for e in enemigos if e not in enemigos_a_eliminar]
+        proyectiles = [p for p in proyectiles if p not in proyectiles_a_eliminar]
 
         # Verificar si el jugador llegó a la meta
-        if player.colliderect(goal):
-            victory = True
+        if jugador.colliderect(meta):
+            victoria = True
 
         # Verificar si el jugador perdió todas sus vidas
-        if lives <= 0:
+        if vidas <= 0:
             print("¡Perdiste!")
-            running = False
+            ejecutando = False
 
     # Dibujar elementos
-    screen.blit(player_image, (player.x, player.y))  # Imagen del jugador
-    screen.blit(goal_image, (goal.x - (goal_image.get_width() // 2) + (goal.width // 2), goal.y))  # Meta centrada
-    for enemy in enemies:
-        screen.blit(enemy_image, (enemy.rect.x, enemy.rect.y))  # Imagen de enemigos
-    for bullet in bullets:
-        pygame.draw.rect(screen, WHITE, bullet)
+    pantalla.blit(imagen_jugador, (jugador.x, jugador.y))
+    pantalla.blit(imagen_meta, (meta.x - (imagen_meta.get_width() // 2) + (meta.width // 2), meta.y))
+    for enemigo in enemigos:
+        pantalla.blit(imagen_enemigo, (enemigo.rect.x, enemigo.rect.y))
+    for proyectil in proyectiles:
+        pygame.draw.rect(pantalla, BLANCO, proyectil)
 
     # Dibujar texto de vidas
-    font = pygame.font.Font(None, 36)
-    lives_text = font.render(f"Vidas: {lives}", True, WHITE)
-    screen.blit(lives_text, (10, 10))
+    fuente = pygame.font.Font(None, 36)
+    texto_vidas = fuente.render(f"Vidas: {vidas}", True, BLANCO)
+    pantalla.blit(texto_vidas, (10, 10))
 
-    if victory:
-        font_victory = pygame.font.Font(None, 50)
-        victory_text = font_victory.render("¡Ganaste!", True, (255, 255, 0))
-        screen.blit(victory_text, (WIDTH//2 - victory_text.get_width()//2, HEIGHT//2 - victory_text.get_height()//2))
+    if victoria:
+        fuente_victoria = pygame.font.Font(None, 50)
+        texto_victoria = fuente_victoria.render("¡Ganaste!", True, (255, 255, 0))
+        pantalla.blit(texto_victoria, (ANCHO//2 - texto_victoria.get_width()//2, ALTO//2 - texto_victoria.get_height()//2))
 
     pygame.display.flip()
-    clock.tick(30)
+    reloj.tick(30)
 
 pygame.quit()
